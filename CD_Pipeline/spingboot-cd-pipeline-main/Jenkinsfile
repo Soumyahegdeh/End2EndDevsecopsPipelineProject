@@ -1,0 +1,48 @@
+pipeline {
+  agent { label 'demo' }
+
+  parameters {
+    string(name: 'IMAGETAG', defaultValue: '1', description: 'Image Tag to Deploy')
+    choice(name:'environment', choices: ['functional','integration','regression','uat','release'], description: 'Select environment')
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git branch: 'main',
+            credentialsId: 'github',
+            url: 'https://github.com/Soumyahegdeh/capstonedevopsproject.git'
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+
+        dir("${params.environment}") {
+
+          sh """
+              echo "Before sed:"
+              cat deployment.yml
+
+              sed -i 's|image: soumyahegde/democicd:.*|image: soumyahegde/democicd:${params.IMAGETAG}|' deployment.yml
+
+              echo "After sed:"
+              cat deployment.yml
+          """
+        }
+
+        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+
+          sh """
+              git config user.email "soumyahegde94@gmail.com"
+              git config user.name "Soumya Hegde"
+
+              git add .
+              git commit -m "Update deployment image to ${params.IMAGETAG}"
+              git push https://${GITHUB_TOKEN}@github.com/Soumyahegdeh/capstonedevopsproject.git HEAD:main
+          """
+        }
+      }
+    }
+  }
+}

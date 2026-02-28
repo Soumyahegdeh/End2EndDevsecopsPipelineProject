@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: devsecops-demo-service
+  labels:
+    app: devsecops-demo
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    nodePort: 31000
+  selector:
+    app: devsecops-demo
